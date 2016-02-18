@@ -1,0 +1,41 @@
+language: python
+
+python:
+    - 2.7
+
+cache:
+    apt: true
+    directories:
+      - $HOME/.cache/pip
+      - $HOME/virtualenv
+
+addons:
+    postgresql: 9.4  
+    apt:
+        packages:
+        - zookeeper 
+
+before_install:
+    - pip install -U pip
+    - export MAJOR_TRAVIS_PYTHON_VERSION=$(python -c "import sys;sys.stdout.write(str(sys.version_info.major))")
+    - echo "127.0.0.1 es rabbitmq zk postgres" | sudo tee -a /etc/hosts
+
+install:
+    - pip install
+      $(if [ $MAJOR_TRAVIS_PYTHON_VERSION = "3" ]; then echo "-r requirements/base.txt"; fi)
+      -r requirements/dev.txt
+      -r requirements/docs.txt
+
+before_script:
+    - export ZOOKEEPER_PATH=/usr/share/java
+
+script:
+    - nosetests
+    - pushd docs
+    - make SPHINXOPTS=-Wn html
+    - popd
+
+notifications:
+    email:
+        on_success: never
+        on_failure: always

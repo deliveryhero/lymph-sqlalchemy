@@ -1,0 +1,15 @@
+.tox
+.coverage*
+*.pyc
+*.swp
+tags
+/build/
+/*.egg-info/
+/dist/
+/docs/_build/
+/env/
+/logs/
+/lib/
+/share/
+/src/
+/_*/

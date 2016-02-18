@@ -1,0 +1,4 @@
+include requirements/*.txt
+include README.rst
+recursive-include lymph/sqlalchemy/migrations/templates *.mako
+recursive-include lymph *.py
