@@ -20,13 +20,42 @@ class ModuleSetUp():
         cls.SAMPLE_TEST_CASE.drop_db()
 
 
-class StoreTestCase(unittest.TestCase):
+class BaseStoreTestCase(unittest.TestCase):
     USE_POSTGIS = True
-    URL = 'postgresql://postgres/lymph-test-sqlalchemy'
-
     @classmethod
-    def create_store(cls, connection=None):
-        return Store(cls.URL, connection=connection)
+    def create_db(cls, engine):
+        create_database(engine.url)
+        if cls.USE_POSTGIS:
+            engine.execute('CREATE EXTENSION postgis;')
+
+    def setup_fixtures(self):
+        self.session = self.store.Session()
+        self.session.add_all(self.get_fixtures())
+        self.session.commit()
+
+    def get_fixtures(self):
+        return []
+
+
+class IsolatedStoreTestCase(BaseStoreTestCase):
+    def get_store(self):
+        raise NotImplementedError('subclasses of IsolatedStoreTestCase must implement `get_store()`')
+
+    def setUp(self):
+        super(IsolatedStoreTestCase, self).setUp()
+        self.store = self.get_store()
+        self.create_db(self.store.engine)
+        self.store.create_all()
+        self.setup_fixtures()
+
+    def tearDown(self):
+        drop_database(self.store.engine.url)
+        self.store.engine.dispose()
+        super(IsolatedStoreTestCase, self).tearDown()
+
+
+class StoreTestCase(BaseStoreTestCase):
+    URL = 'postgresql://postgres/lymph-test-sqlalchemy'
 
     @classmethod
     def url(cls):
@@ -41,16 +70,14 @@ class StoreTestCase(unittest.TestCase):
         engine.dispose()
 
     @classmethod
-    def create_db(cls, engine):
-        create_database(engine.url)
-        if cls.USE_POSTGIS:
-            engine.execute('CREATE EXTENSION postgis;')
-
-    @classmethod
     def drop_db(cls):
         engine = create_engine(cls.url())
         drop_database(engine.url)
         engine.dispose()
+
+    @classmethod
+    def create_store(cls, connection=None):
+        return Store(cls.url(), connection=connection)
 
     @classmethod
     def setUpClass(cls):
@@ -77,13 +104,8 @@ class StoreTestCase(unittest.TestCase):
 
     def setUp(self):
         self.inner_transaction = self.connection.begin_nested()
-        self.session = self.store.Session()
-        self.session.add_all(self.get_fixtures())
-        self.session.commit()
+        self.setup_fixtures()
         super(StoreTestCase, self).setUp()
-
-    def get_fixtures(self):
-        return []
 
     def tearDown(self):
         self.session.close()
