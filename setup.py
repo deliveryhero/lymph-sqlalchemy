@@ -8,7 +8,7 @@ with open('README.rst') as f:
 
 setup(
     name='lymph-sqlalchemy',
-    version='0.6.0-dev',
+    version='0.6.0',
     url='http://github.com/deliveryhero/lymph-sqlalchemy/',
     packages=find_packages(),
     namespace_packages=['lymph'],

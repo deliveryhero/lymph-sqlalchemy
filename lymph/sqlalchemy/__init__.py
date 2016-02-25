@@ -4,4 +4,4 @@ from lymph.sqlalchemy.interfaces import StoreInterface  # noqa
 from lymph.sqlalchemy.base import Base  # noqa
 
 
-__version__ = '0.6.0-dev'
+__version__ = '0.6.0'
